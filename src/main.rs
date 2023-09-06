@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsString, fmt, path::Path, process, str::FromStr};
+use std::{borrow::Cow, ffi::OsString, fmt, fs, io, path::Path, process, str::FromStr};
 
 use audiotags::AudioTag;
 use clap::Parser;
@@ -13,6 +13,9 @@ enum Error {
 
     #[error("bad format key: {0}")]
     Format(String),
+
+    #[error(transparent)]
+    IO(#[from] io::Error),
 
     #[error("missing required tag: {0}")]
     MissingTag(Tag),
@@ -76,9 +79,14 @@ impl fmt::Display for Tag {
 }
 
 #[derive(Debug, Parser)]
+#[command(author, version)]
 struct Args {
     template: String,
     paths: Vec<String>,
+
+    /// perform rename
+    #[arg(short = 'f', long = "force")]
+    rename: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -145,7 +153,11 @@ fn run(args: Args) -> Result<()> {
         }
 
         let new_path = path.with_file_name(name);
-        println!("{}", new_path.display());
+        if args.rename {
+            fs::rename(path, new_path)?;
+        } else {
+            println!("{}", new_path.display());
+        }
     }
     Ok(())
 }
