@@ -31,7 +31,7 @@ enum Tag {
 }
 
 impl Tag {
-    fn read_from(self, meta: &Box<dyn AudioTag>) -> Result<Cow<'_, str>> {
+    fn read_from(self, meta: &dyn AudioTag) -> Result<Cow<'_, str>> {
         match self {
             Tag::Album => Ok(meta.album().ok_or(Error::MissingTag(self))?.title.into()),
             Tag::Artist => meta.artist().map(Cow::from).ok_or(Error::MissingTag(self)),
@@ -119,7 +119,7 @@ impl Format {
         })
     }
 
-    fn build_name(&self, meta: &Box<dyn AudioTag>) -> Result<String> {
+    fn build_name(&self, meta: &dyn AudioTag) -> Result<String> {
         let mut f = String::new();
 
         for element in &self.elements {
@@ -146,7 +146,7 @@ fn run(args: Args) -> Result<()> {
         let path = Path::new(path);
         let meta = audiotags::Tag::new().read_from_path(path)?;
 
-        let mut name = OsString::from(format.build_name(&meta)?);
+        let mut name = OsString::from(format.build_name(meta.as_ref())?);
         if let Some(extension) = path.extension() {
             name.push(".");
             name.push(extension);
