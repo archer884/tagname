@@ -31,7 +31,7 @@ enum Tag {
 }
 
 impl Tag {
-    fn read_from<'a>(self, meta: &'a Box<dyn AudioTag>) -> Result<Cow<'a, str>> {
+    fn read_from(self, meta: &Box<dyn AudioTag>) -> Result<Cow<'_, str>> {
         match self {
             Tag::Album => Ok(meta.album().ok_or(Error::MissingTag(self))?.title.into()),
             Tag::Artist => meta.artist().map(Cow::from).ok_or(Error::MissingTag(self)),
